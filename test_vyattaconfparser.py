@@ -96,6 +96,14 @@ class TestBackupOspfRoutesEdgemax(unittest.TestCase):
         assert isinstance(rv, dict) 
         assert_equal(rv, correct)
 
+    def test_detailed_config_parse_correctly_a1(self):
+      s, correct = get_detailed_parse_str_dict()
+      rv = vparser.parse_conf(s)
+      assert isinstance(rv, dict) 
+      assert_equal(rv, correct)
+      
+
+
     ## Future comment parsing (using '_comment' key -- parsed obj format not yet selected).
     # def test_parsing_config_comments(self):
     #     s = """interfaces {
@@ -152,6 +160,125 @@ class TestBackupOspfRoutesEdgemax(unittest.TestCase):
     #     rv = vparser.parse_conf(s)
     #     assert isinstance(rv, dict) 
     #     assert_equal(rv, correct)
+
+
+def get_detailed_parse_str_dict():
+  s = """
+    interfaces {
+       ethernet eth0 {
+           address 192.168.0.2/24
+           address 192.168.1.2/24
+           description eth0-upstream
+           duplex auto
+           ip {
+               ospf {
+                   authentication {
+                       md5 {
+                           key-id 1 {
+                               md5-key 1234567890
+                           }
+                       }
+                   }
+                   cost 2
+                   dead-interval 40
+                   hello-interval 10
+                   priority 1
+                   retransmit-interval 5
+                   transmit-delay 1
+               }
+           }
+           speed auto
+       }
+       ethernet eth1 {
+           address 192.168.2.2/24
+           description eth1-other
+           duplex auto
+           speed auto
+       }
+    }
+    protocols {
+        static {
+            route 0.0.0.0/0 {
+                next-hop 1.2.3.4 {
+                    distance 10
+                }
+            }
+            route 10.1.0.5/32 {
+                next-hop 2.3.4.5 {
+                    distance 180
+                }
+            }
+            route 10.2.0.0/24 {
+                next-hop 1.2.3.4 {
+                    distance 180
+                }
+            }
+            route 10.3.1.0/24 {
+                next-hop 44.55.3.2 {
+                    distance 180
+                }
+            }
+      }
+    }
+    """
+  correct = {
+    'interfaces': {
+      'ethernet': {
+        'eth0': {
+          'address': ['192.168.0.2/24', '192.168.1.2/24'],
+          'description': 'eth0-upstream',
+          'duplex': 'auto',
+          'speed': 'auto',
+          'ip': {
+            'ospf': {
+              'authentication': {
+                'md5': {
+                  'key-id': {
+                    '1': {'md5-key': '1234567890'}
+                  }
+                }
+              },
+              'cost': '2',
+              'dead-interval': '40',
+              'hello-interval': '10',
+              'priority': '1',
+              'retransmit-interval': '5',
+              'transmit-delay': '1'
+            }
+          }
+        },
+        'eth1': {
+          'address': '192.168.2.2/24',
+          'description': 'eth1-other',
+           'duplex': 'auto',
+           'speed': 'auto'
+        }
+      }
+    },
+    'protocols': {
+      'static': {
+        'route': {
+          '0.0.0.0/0': {
+            'next-hop': {'1.2.3.4': {'distance': '10'}}
+          },
+          '10.1.0.5/32': {
+            'next-hop': {'2.3.4.5': {'distance': '180'}}
+          },
+          '10.2.0.0/24': {
+              'next-hop': {'1.2.3.4': {'distance': '180'}}
+          },
+          '10.3.1.0/24': {
+              'next-hop': {'44.55.3.2': {'distance': '180'}}
+          }
+        }
+      }
+    }
+
+
+
+
+  }
+  return (s, correct)
 
 if __name__ == "__main__":
     unittest.main()
